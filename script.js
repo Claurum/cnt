@@ -1,7 +1,89 @@
-[file name]: script.js
-[file content begin]
 // JavaScript для вертикального макета с улучшениями
 document.addEventListener('DOMContentLoaded', function() {
+    // Переключение темы
+const themeToggle = document.getElementById('themeToggle');
+const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+const currentTheme = localStorage.getItem('theme');
+
+// Устанавливаем начальную тему
+if (currentTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+} else if (currentTheme === 'light') {
+    document.body.classList.add('light-theme');
+} else if (prefersDarkScheme.matches) {
+    document.body.classList.add('dark-theme');
+    localStorage.setItem('theme', 'dark');
+}
+
+// Обработчик переключения темы
+if (themeToggle) {
+    themeToggle.addEventListener('click', function() {
+        const isDark = document.body.classList.contains('dark-theme');
+        
+        if (isDark) {
+            document.body.classList.remove('dark-theme');
+            document.body.classList.add('light-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.body.classList.remove('light-theme');
+            document.body.classList.add('dark-theme');
+            localStorage.setItem('theme', 'dark');
+        }
+        
+        // Анимация кнопки
+        this.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            this.style.transform = 'scale(1)';
+        }, 150);
+    });
+}
+
+// Обновляем aria-label кнопки в зависимости от темы
+function updateThemeButtonLabel() {
+    if (themeToggle) {
+        const isDark = document.body.classList.contains('dark-theme');
+        themeToggle.setAttribute('aria-label', 
+            isDark ? 'Переключить на светлую тему' : 'Переключить на темную тему'
+        );
+    }
+}
+
+// Вызываем при загрузке и при изменении
+updateThemeButtonLabel();
+if (themeToggle) {
+    themeToggle.addEventListener('click', updateThemeButtonLabel);
+}
+    // Preloader
+    const preloader = document.getElementById('preloader');
+    if (preloader) {
+        // Скрываем preloader через 1.5 секунды
+        setTimeout(() => {
+            preloader.classList.add('fade-out');
+            setTimeout(() => {
+                preloader.style.display = 'none';
+            }, 500);
+        }, 1500);
+    }
+    
+    // Кнопка "Наверх"
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+    if (scrollToTopBtn) {
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+        
+        scrollToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+    
     // Мобильное меню
     const menuToggle = document.querySelector('.menu-toggle');
     const navLinks = document.querySelector('.nav-links');
@@ -9,6 +91,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (menuToggle) {
         menuToggle.addEventListener('click', function() {
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', !isExpanded);
+            
             navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
             
             if (window.innerWidth <= 768) {
@@ -53,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
         link.addEventListener('click', () => {
             if (window.innerWidth <= 768) {
                 navLinks.style.display = 'none';
+                menuToggle.setAttribute('aria-expanded', 'false');
             }
         });
     });
@@ -82,13 +168,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Плавная прокрутка с активным состоянием
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
-            e.preventDefault();
-            
             const targetId = this.getAttribute('href');
             if (targetId === '#') return;
             
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
+                e.preventDefault();
+                
                 // Удаляем активный класс у всех ссылок
                 document.querySelectorAll('.nav-links a').forEach(link => {
                     link.classList.remove('active');
@@ -101,6 +187,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     top: targetElement.offsetTop - 80,
                     behavior: 'smooth'
                 });
+                
+                // Обновляем фокус для доступности
+                targetElement.setAttribute('tabindex', '-1');
+                targetElement.focus();
+                setTimeout(() => targetElement.removeAttribute('tabindex'), 1000);
             }
         });
     });
@@ -120,9 +211,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.style.borderColor = 'var(--danger-color)';
                     input.style.animation = 'shake 0.5s ease-in-out';
                     isValid = false;
+                    
+                    // Сообщение об ошибке для доступности
+                    input.setAttribute('aria-invalid', 'true');
+                    input.setAttribute('aria-describedby', 'error-' + input.name);
                 } else {
                     input.style.borderColor = 'rgba(255, 255, 255, 0.4)';
                     input.style.animation = '';
+                    input.removeAttribute('aria-invalid');
+                    input.removeAttribute('aria-describedby');
                 }
             });
             
@@ -132,9 +229,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
                 submitBtn.disabled = true;
+                submitBtn.setAttribute('aria-label', 'Идет отправка формы');
                 
                 // Создаем красивый контейнер для уведомления
                 const notification = document.createElement('div');
+                notification.setAttribute('role', 'alert');
+                notification.setAttribute('aria-live', 'assertive');
                 notification.style.cssText = `
                     position: fixed;
                     top: 20px;
@@ -153,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     gap: 15px;
                 `;
                 notification.innerHTML = `
-                    <i class="fas fa-check-circle" style="font-size: 24px;"></i>
+                    <i class="fas fa-check-circle" style="font-size: 24px;" aria-hidden="true"></i>
                     <div>
                         <h4 style="margin: 0 0 5px 0; font-weight: 600;">Успешно отправлено!</h4>
                         <p style="margin: 0; opacity: 0.9; font-size: 14px;">Мы свяжемся с вами в течение 24 часов.</p>
@@ -179,6 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     demoForm.reset();
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
+                    submitBtn.setAttribute('aria-label', 'Заказать демо');
                     
                     // Добавляем анимацию успеха
                     submitBtn.innerHTML = '<i class="fas fa-check"></i> Отправлено!';
@@ -209,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Наблюдаем за элементами
-    document.querySelectorAll('.module-card, .advantage-card, .tech-item, .stat-item, .tech-category').forEach(el => {
+    document.querySelectorAll('.module-card, .advantage-card, .tech-item, .stat-item, .tech-category, .testimonial-card').forEach(el => {
         observer.observe(el);
     });
     
@@ -222,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (entry.isIntersecting) {
                 statNumbers.forEach(stat => {
                     if (!stat.dataset.animated) {
-                        const finalValue = parseInt(stat.textContent);
+                        const finalValue = parseInt(stat.textContent.replace(',', ''));
                         const duration = 2000;
                         const startTime = Date.now();
                         
@@ -241,6 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 requestAnimationFrame(animate);
                             } else {
                                 stat.dataset.animated = 'true';
+                                stat.textContent = finalValue.toLocaleString();
                             }
                         };
                         
@@ -269,14 +371,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.querySelector('.hero');
         if (!container) return;
         
+        // Очищаем существующие элементы
+        document.querySelectorAll('.floating-element').forEach(el => el.remove());
+        
         for (let i = 0; i < 5; i++) {
             const element = document.createElement('div');
             element.className = 'floating-element';
+            element.setAttribute('aria-hidden', 'true');
             element.style.cssText = `
                 position: absolute;
                 background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.1));
                 border-radius: ${i % 2 === 0 ? '50%' : '30%'};
-                animation: float ${6 + i * 2}s ease-in-out infinite;
+                animation: float-delayed ${6 + i * 2}s ease-in-out infinite;
                 animation-delay: ${i}s;
                 z-index: 0;
                 width: ${50 + Math.random() * 100}px;
@@ -298,6 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const y = e.pageY - this.offsetTop;
             
             const ripple = document.createElement('span');
+            ripple.setAttribute('aria-hidden', 'true');
             ripple.style.cssText = `
                 position: absolute;
                 background: rgba(255, 255, 255, 0.3);
@@ -351,10 +458,101 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(animateProgressBars, 1000);
     
     // Обновляем текущий год в футере
-    const yearElement = document.querySelector('.footer-bottom p');
+    const yearElement = document.getElementById('currentYear');
     if (yearElement) {
         const currentYear = new Date().getFullYear();
-        yearElement.textContent = yearElement.textContent.replace('2025', currentYear);
+        yearElement.textContent = currentYear;
     }
+    
+    // Копирование email по клику
+    const emailLink = document.querySelector('a[href^="mailto:"]');
+    if (emailLink) {
+        emailLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            const email = this.href.replace('mailto:', '');
+            navigator.clipboard.writeText(email).then(() => {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> Скопировано!';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+    }
+    
+    // Ленивая загрузка изображений
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const src = img.getAttribute('data-src');
+                    if (src) {
+                        img.src = src;
+                        img.classList.add('loaded');
+                    }
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+        
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+        });
+    }
+    
+    // Сохранение позиции скролла
+    window.addEventListener('beforeunload', () => {
+        sessionStorage.setItem('scrollPosition', window.pageYOffset);
+    });
+    
+    // Восстановление позиции скролла
+    const savedPosition = sessionStorage.getItem('scrollPosition');
+    if (savedPosition && savedPosition > 0) {
+        window.scrollTo(0, parseInt(savedPosition));
+        sessionStorage.removeItem('scrollPosition');
+    }
+    
+    // Микро-взаимодействия для карточек
+    document.querySelectorAll('.module-card, .advantage-card, .testimonial-card').forEach(card => {
+        card.addEventListener('mousemove', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateY = (x - centerX) / 25;
+            const rotateX = (centerY - y) / 25;
+            
+            this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+        });
+    });
+    
+    // Индикатор прогресса чтения
+    const progressBar = document.createElement('div');
+    progressBar.className = 'reading-progress';
+    progressBar.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+        width: 0%;
+        z-index: 999;
+        transition: width 0.3s ease;
+    `;
+    document.body.appendChild(progressBar);
+    
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (winScroll / height) * 100;
+        progressBar.style.width = scrolled + '%';
+    });
 });
-[file content end]
