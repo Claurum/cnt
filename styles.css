@@ -3366,3 +3366,612 @@ body.dark-theme ::-webkit-scrollbar-thumb:hover {
         color-scheme: light;
     }
 }
+/* ========== TEAM SECTION ========== */
+.team-section {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+body.dark-theme .team-section {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+.team-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+}
+
+body.dark-theme .team-section::before {
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.02) 0%, transparent 70%);
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 40px;
+    max-width: 900px;
+    margin: 0 auto 80px;
+    position: relative;
+    z-index: 1;
+}
+
+.team-card {
+    perspective: 1500px;
+    height: 500px;
+}
+
+.team-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+}
+
+
+/* Фиксируем transform для перевернутых карточек */
+.team-card-inner.flipped {
+    transform: rotateY(180deg) !important;
+}
+
+/* Отключаем 3D эффект при наведении для перевернутых карточек */
+.team-card:hover .team-card-inner.flipped {
+    transform: rotateY(180deg) !important;
+}
+
+.team-front,
+.team-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: var(--radius-xl);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.team-front {
+    background: white;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+body.dark-theme .team-front {
+    background: #1e293b;
+    border: 1px solid var(--border-color);
+}
+
+.team-back {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: white;
+    transform: rotateY(180deg);
+    overflow: hidden;
+    position: relative;
+}
+
+.team-back::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.team-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    color: white;
+    font-size: 48px;
+    position: relative;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.team-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+
+.avatar-ring {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    animation: pulse-ring 2s ease-out infinite;
+}
+
+.ring-2 {
+    animation-delay: 0.5s;
+}
+
+.ring-3 {
+    animation-delay: 1s;
+}
+
+@keyframes pulse-ring {
+    0% {
+        width: 120px;
+        height: 120px;
+        opacity: 0.5;
+    }
+    100% {
+        width: 160px;
+        height: 160px;
+        opacity: 0;
+    }
+}
+
+.team-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 8px;
+    transition: color 0.3s ease;
+}
+
+.team-front:hover .team-name {
+    color: var(--primary-color);
+}
+
+body.dark-theme .team-name {
+    color: var(--dark-color);
+}
+
+.team-role {
+    font-size: 16px;
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.team-expertise {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.expertise-tag {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    color: var(--primary-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+body.dark-theme .expertise-tag {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.expertise-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.team-stats {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.team-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.team-stats .stat-number {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.team-stats .stat-label {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Back side styles */
+.team-back h4 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.team-bio {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+}
+
+.team-skills {
+    width: 100%;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 1;
+}
+
+.skill {
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.skill-name {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    opacity: 0.9;
+}
+
+.skill-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.skill-level {
+    height: 100%;
+    background: linear-gradient(90deg, white, rgba(255, 255, 255, 0.8));
+    border-radius: 3px;
+    transition: width 1s ease-in-out;
+}
+
+.team-social {
+    display: flex;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.social-link {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+}
+
+.social-link:hover {
+    background: white;
+    color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+}
+
+/* Team Message */
+.team-message {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: 60px;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+body.dark-theme .team-message {
+    background: #1e293b;
+    border: 1px solid var(--border-color);
+}
+
+.team-message::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+}
+
+.message-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    color: white;
+    font-size: 32px;
+}
+
+.team-message h3 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 16px;
+}
+
+body.dark-theme .team-message h3 {
+    color: var(--dark-color);
+}
+
+.team-message p {
+    color: var(--text-light);
+    max-width: 600px;
+    margin: 0 auto 40px;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+body.dark-theme .team-message p {
+    color: var(--text-color);
+}
+
+.collaboration-stats {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+}
+
+.collab-stat {
+    text-align: center;
+}
+
+.collab-number {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+}
+
+.collab-label {
+    font-size: 14px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+body.dark-theme .collab-label {
+    color: var(--text-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .team-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .team-card {
+        height: 450px;
+    }
+    
+    .team-front,
+    .team-back {
+        padding: 30px 20px;
+    }
+    
+    .team-message {
+        padding: 40px 20px;
+    }
+    
+    .collaboration-stats {
+        gap: 30px;
+    }
+    
+    .collab-number {
+        font-size: 32px;
+    }
+    
+    .team-card {
+        cursor: pointer;
+    }
+}
+
+@media (max-width: 480px) {
+    .team-card {
+        height: 420px;
+    }
+    
+    .team-stats {
+        gap: 20px;
+    }
+    
+    .team-stats .stat-number {
+        font-size: 28px;
+    }
+    
+    .collaboration-stats {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
+
+/* 3D эффект при наведении - только для неперевернутых карточек */
+.team-card-inner:not(.flipped) {
+    transition: transform 0.3s ease;
+}
+
+.team-card:hover .team-card-inner:not(.flipped) {
+    transform: rotateY(15deg) rotateX(5deg) scale3d(1.02, 1.02, 1.02);
+}
+
+
+/* Стили для кликабельного заголовка на обратной стороне */
+.flip-back-title {
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    padding-bottom: 8px;
+    display: inline-block;
+}
+
+.flip-back-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.8);
+    transition: width 0.3s ease;
+}
+
+.flip-back-title:hover::after {
+    width: 100%;
+}
+
+.flip-back-title:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+/* Добавляем стрелку для наглядности */
+.flip-back-title::before {
+    content: '← ';
+    opacity: 0.7;
+    margin-right: 5px;
+    transition: opacity 0.3s ease;
+}
+
+.flip-back-title:hover::before {
+    opacity: 1;
+}
+
+/* Добавьте в конец CSS файла */
+
+/* Стили для кликабельного заголовка */
+.flip-back-title {
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    padding-bottom: 8px;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.flip-back-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.8);
+    transition: width 0.3s ease;
+}
+
+.flip-back-title:hover::after {
+    width: 100%;
+}
+
+.flip-back-title:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+/* Добавляем иконку для наглядности */
+.flip-back-title::before {
+    content: '↶';
+    display: inline-block;
+    margin-right: 8px;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    font-size: 1.1em;
+}
+
+.flip-back-title:hover::before {
+    opacity: 1;
+    transform: rotate(-15deg);
+}
+
+/* Улучшаем видимость для аватара на лицевой стороне */
+.team-avatar {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.team-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+
+/* Убедимся, что переворот работает правильно */
+.team-card-inner.flipped {
+    transform: rotateY(180deg) !important;
+}
+
+/* 3D эффект только для неперевернутых карточек */
+.team-card-inner:not(.flipped) {
+    transition: transform 0.3s ease !important;
+}
+
+/* Для мобильных - более заметный курсор */
+@media (max-width: 768px) {
+    .team-avatar {
+        cursor: pointer;
+    }
+    
+    .flip-back-title::before {
+        content: '👈';
+        margin-right: 5px;
+    }
+}

@@ -1,58 +1,59 @@
 // JavaScript для вертикального макета с улучшениями
 document.addEventListener('DOMContentLoaded', function() {
     // Переключение темы
-const themeToggle = document.getElementById('themeToggle');
-const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-const currentTheme = localStorage.getItem('theme');
+    const themeToggle = document.getElementById('themeToggle');
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const currentTheme = localStorage.getItem('theme');
 
-// Устанавливаем начальную тему
-if (currentTheme === 'dark') {
-    document.body.classList.add('dark-theme');
-} else if (currentTheme === 'light') {
-    document.body.classList.add('light-theme');
-} else if (prefersDarkScheme.matches) {
-    document.body.classList.add('dark-theme');
-    localStorage.setItem('theme', 'dark');
-}
-
-// Обработчик переключения темы
-if (themeToggle) {
-    themeToggle.addEventListener('click', function() {
-        const isDark = document.body.classList.contains('dark-theme');
-        
-        if (isDark) {
-            document.body.classList.remove('dark-theme');
-            document.body.classList.add('light-theme');
-            localStorage.setItem('theme', 'light');
-        } else {
-            document.body.classList.remove('light-theme');
-            document.body.classList.add('dark-theme');
-            localStorage.setItem('theme', 'dark');
-        }
-        
-        // Анимация кнопки
-        this.style.transform = 'scale(0.9)';
-        setTimeout(() => {
-            this.style.transform = 'scale(1)';
-        }, 150);
-    });
-}
-
-// Обновляем aria-label кнопки в зависимости от темы
-function updateThemeButtonLabel() {
-    if (themeToggle) {
-        const isDark = document.body.classList.contains('dark-theme');
-        themeToggle.setAttribute('aria-label', 
-            isDark ? 'Переключить на светлую тему' : 'Переключить на темную тему'
-        );
+    // Устанавливаем начальную тему
+    if (currentTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+    } else if (currentTheme === 'light') {
+        document.body.classList.add('light-theme');
+    } else if (prefersDarkScheme.matches) {
+        document.body.classList.add('dark-theme');
+        localStorage.setItem('theme', 'dark');
     }
-}
 
-// Вызываем при загрузке и при изменении
-updateThemeButtonLabel();
-if (themeToggle) {
-    themeToggle.addEventListener('click', updateThemeButtonLabel);
-}
+    // Обработчик переключения темы
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            const isDark = document.body.classList.contains('dark-theme');
+            
+            if (isDark) {
+                document.body.classList.remove('dark-theme');
+                document.body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.body.classList.remove('light-theme');
+                document.body.classList.add('dark-theme');
+                localStorage.setItem('theme', 'dark');
+            }
+            
+            // Анимация кнопки
+            this.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 150);
+        });
+    }
+
+    // Обновляем aria-label кнопки в зависимости от темы
+    function updateThemeButtonLabel() {
+        if (themeToggle) {
+            const isDark = document.body.classList.contains('dark-theme');
+            themeToggle.setAttribute('aria-label', 
+                isDark ? 'Переключить на светлую тему' : 'Переключить на темную тему'
+            );
+        }
+    }
+
+    // Вызываем при загрузке и при изменении
+    updateThemeButtonLabel();
+    if (themeToggle) {
+        themeToggle.addEventListener('click', updateThemeButtonLabel);
+    }
+
     // Preloader
     const preloader = document.getElementById('preloader');
     if (preloader) {
@@ -556,3 +557,150 @@ if (themeToggle) {
         progressBar.style.width = scrolled + '%';
     });
 });
+
+// ========== TEAM CARDS FUNCTIONALITY ==========
+
+// Функция для переворота карточки
+function flipTeamCard(card) {
+    const inner = card.querySelector('.team-card-inner');
+    inner.classList.toggle('flipped');
+    
+    // Сбрасываем 3D трансформацию при возврате
+    if (!inner.classList.contains('flipped')) {
+        inner.style.transform = 'rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1)';
+    }
+}
+
+// Инициализация карточек команды
+function initTeamCards() {
+    const teamCards = document.querySelectorAll('.team-card');
+    
+    if (teamCards.length === 0) return;
+    
+    teamCards.forEach(card => {
+        const inner = card.querySelector('.team-card-inner');
+        
+        // Клик на ВСЕЙ карточке - только для мобильных
+        card.addEventListener('click', function(e) {
+            // Проверяем, был ли клик по элементам, которые имеют свою логику
+            if (e.target.closest('.team-avatar') || 
+                e.target.closest('.team-social') || 
+                e.target.closest('.flip-back-title') ||
+                e.target.closest('.social-link')) {
+                return;
+            }
+            
+            // Только для мобильных
+            if (window.innerWidth <= 768) {
+                flipTeamCard(this);
+            }
+        });
+
+        // 3D эффект при наведении - только для десктопа и неперевернутых карточек
+        card.addEventListener('mousemove', function(e) {
+            if (window.innerWidth > 768 && !inner.classList.contains('flipped')) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateY = (x - centerX) / 25;
+                const rotateX = (centerY - y) / 25;
+                
+                inner.style.transform = `rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale3d(1.02, 1.02, 1.02)`;
+            }
+        });
+
+        card.addEventListener('mouseleave', function() {
+            if (window.innerWidth > 768 && !inner.classList.contains('flipped')) {
+                inner.style.transform = 'rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1)';
+            }
+        });
+    });
+    
+    // Клик на иконке аватара - переворачивает карточку
+    document.querySelectorAll('.team-avatar').forEach(avatar => {
+        avatar.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            const teamCard = this.closest('.team-card');
+            if (teamCard) {
+                flipTeamCard(teamCard);
+            }
+        });
+    });
+    
+    // Клик на заголовке "О разработчике/дизайнере" - переворачивает обратно
+    document.querySelectorAll('.flip-back-title').forEach(title => {
+        title.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            const teamCard = this.closest('.team-card');
+            if (teamCard) {
+                flipTeamCard(teamCard);
+            }
+        });
+    });
+    
+    // Социальные ссылки - просто открывают ссылки, не переворачивают
+    document.querySelectorAll('.team-social .social-link').forEach(link => {
+        // Убираем любую обработку клика кроме стандартного поведения браузера
+        link.addEventListener('click', function(e) {
+            // Разрешаем переход по ссылке в новой вкладке
+            // Не делаем ничего дополнительного
+        });
+    });
+    
+    // Анимация появления карточек команды
+    const teamObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                    
+                    // Анимация прогресса навыков
+                    if (entry.target.classList.contains('team-card')) {
+                        const skillLevels = entry.target.querySelectorAll('.skill-level');
+                        skillLevels.forEach(level => {
+                            const width = level.style.width;
+                            level.style.width = '0%';
+                            setTimeout(() => {
+                                level.style.transition = 'width 1.5s ease-in-out';
+                                level.style.width = width;
+                            }, 500);
+                        });
+                    }
+                }, index * 300);
+            }
+        });
+    }, { threshold: 0.2 });
+    
+    // Наблюдаем за карточками команды
+    document.querySelectorAll('.team-card, .team-message').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        teamObserver.observe(el);
+    });
+    
+    // Анимация кольцевых аватаров
+    function animateAvatars() {
+        const avatars = document.querySelectorAll('.team-avatar');
+        avatars.forEach(avatar => {
+            const rings = avatar.querySelectorAll('.avatar-ring');
+            rings.forEach((ring, index) => {
+                ring.style.animationDelay = `${index * 0.5}s`;
+                ring.style.animationPlayState = 'running';
+            });
+        });
+    }
+    
+    // Запускаем анимацию аватаров при загрузке
+    setTimeout(animateAvatars, 1000);
+}
+
+// Инициализируем карточки команды после загрузки DOM
+document.addEventListener('DOMContentLoaded', initTeamCards);
