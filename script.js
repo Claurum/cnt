@@ -704,3 +704,11 @@ function initTeamCards() {
 
 // Инициализируем карточки команды после загрузки DOM
 document.addEventListener('DOMContentLoaded', initTeamCards);
+
+// Загрузка игры после загрузки основной страницы
+window.addEventListener('load', function() {
+    // Проверяем, если game.js еще не загружен
+    if (typeof window.initCodeGame === 'undefined') {
+        console.log('Загрузка игры "Собери код"...');
+    }
+});
