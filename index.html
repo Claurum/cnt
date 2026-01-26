@@ -19,6 +19,21 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
 </head>
 <body>
+
+    <div id="counters"></div>
+    <script>
+    // Получение данных из БД
+    fetch('api.php')
+        .then(response => response.json())
+        .then(data => {
+            let html = '';
+            data.forEach(counter => {
+                html += `<div>${counter.counter_name}: ${counter.counter_value}</div>`;
+            });
+            document.getElementById('counters').innerHTML = html;
+        });
+    </script>
+    
     <!-- Кнопка переключения темы -->
     <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
         <i class="fas fa-moon"></i>
@@ -748,5 +763,6 @@
 
     <script src="script.js"></script>
     <script src="game.js"></script>
+    
 </body>
 </html>
