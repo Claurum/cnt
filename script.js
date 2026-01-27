@@ -197,40 +197,230 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Форма заявки с улучшениями
-    const demoForm = document.getElementById('demoRequestForm');
-    if (demoForm) {
-        demoForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Простая валидация
-            const inputs = this.querySelectorAll('input[required]');
-            let isValid = true;
-            
-            inputs.forEach(input => {
-                if (!input.value.trim()) {
-                    input.style.borderColor = 'var(--danger-color)';
-                    input.style.animation = 'shake 0.5s ease-in-out';
-                    isValid = false;
-                    
-                    // Сообщение об ошибке для доступности
-                    input.setAttribute('aria-invalid', 'true');
-                    input.setAttribute('aria-describedby', 'error-' + input.name);
-                } else {
-                    input.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                    input.style.animation = '';
-                    input.removeAttribute('aria-invalid');
-                    input.removeAttribute('aria-describedby');
-                }
+    // ========== ФОРМА ДЕМО-ЗАПРОСА С БАЗОЙ ДАННЫХ ==========
+
+// Обновленный обработчик формы демо-запроса
+const demoForm = document.getElementById('demoRequestForm');
+if (demoForm) {
+    demoForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Простая валидация
+        const inputs = this.querySelectorAll('input[required]');
+        let isValid = true;
+        
+        // Собираем данные формы
+        const formData = {
+            name: this.querySelector('input[placeholder="Ваше имя"]').value,
+            email: this.querySelector('input[type="email"]').value,
+            organization: this.querySelector('input[placeholder="Организация"]').value || ''
+        };
+        
+        // Валидация полей
+        inputs.forEach(input => {
+            if (!input.value.trim()) {
+                input.style.borderColor = 'var(--danger-color)';
+                input.style.animation = 'shake 0.5s ease-in-out';
+                isValid = false;
+                
+                input.setAttribute('aria-invalid', 'true');
+                input.setAttribute('aria-describedby', 'error-' + input.name);
+            } else {
+                input.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+                input.style.animation = '';
+                input.removeAttribute('aria-invalid');
+                input.removeAttribute('aria-describedby');
+            }
+        });
+        
+        if (!isValid) return;
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        // Показываем состояние отправки
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
+        submitBtn.disabled = true;
+        submitBtn.setAttribute('aria-label', 'Идет отправка формы');
+        
+        try {
+            // Отправка данных на сервер
+            const response = await fetch('api/submit_demo.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
             });
             
-            if (isValid) {
-                const submitBtn = this.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
+            const result = await response.json();
+            
+            if (result.success) {
+                // Успешная отправка
+                showNotification(result.message, 'success');
+                demoForm.reset();
                 
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
-                submitBtn.disabled = true;
-                submitBtn.setAttribute('aria-label', 'Идет отправка формы');
+                // Отправка данных в Google Analytics (если есть)
+                if (typeof gtag === 'function') {
+                    gtag('event', 'demo_request', {
+                        'event_category': 'engagement',
+                        'event_label': 'Demo Request Form'
+                    });
+                }
+            } else {
+                showNotification(result.error || 'Ошибка отправки', 'error');
+            }
+            
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Ошибка подключения к серверу', 'error');
+            
+            // Fallback: сохраняем в localStorage если сервер недоступен
+            saveToLocalStorage(formData);
+            
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            submitBtn.setAttribute('aria-label', 'Заказать демо');
+        }
+    });
+}
+
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+
+// Функция для сохранения в localStorage как fallback
+function saveToLocalStorage(formData) {
+    try {
+        const pendingRequests = JSON.parse(localStorage.getItem('pendingDemoRequests') || '[]');
+        formData.timestamp = new Date().toISOString();
+        pendingRequests.push(formData);
+        localStorage.setItem('pendingDemoRequests', JSON.stringify(pendingRequests));
+        
+        showNotification('Заявка сохранена локально. Мы отправим ее при восстановлении соединения.', 'warning');
+    } catch (e) {
+        console.error('LocalStorage error:', e);
+    }
+}
+
+// Функция для синхронизации сохраненных запросов
+async function syncPendingRequests() {
+    try {
+        const pendingRequests = JSON.parse(localStorage.getItem('pendingDemoRequests') || '[]');
+        
+        if (pendingRequests.length === 0) return;
+        
+        for (const request of pendingRequests) {
+            try {
+                const response = await fetch('api/submit_demo.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(request)
+                });
+                
+                if (response.ok) {
+                    // Удаляем успешно отправленный запрос
+                    const updatedRequests = pendingRequests.filter(r => r.timestamp !== request.timestamp);
+                    localStorage.setItem('pendingDemoRequests', JSON.stringify(updatedRequests));
+                }
+            } catch (e) {
+                console.error('Sync error:', e);
+                break;
+            }
+        }
+    } catch (e) {
+        console.error('Sync initialization error:', e);
+    }
+}
+
+//ФУНКЦИЯ УВЕДОМЛЕНИЙ 
+
+// Замените существующую функцию showNotification на эту
+function showNotification(message, type = 'info') {
+    // Создаем красивый контейнер для уведомления
+    const notification = document.createElement('div');
+    notification.setAttribute('role', 'alert');
+    notification.setAttribute('aria-live', 'assertive');
+    notification.className = 'notification';
+    
+    // Настройка стилей для разных типов уведомлений
+    const styles = {
+        success: 'linear-gradient(135deg, var(--success-color), #10b981)',
+        error: 'linear-gradient(135deg, var(--danger-color), #ef4444)',
+        warning: 'linear-gradient(135deg, var(--warning-color), #f59e0b)',
+        info: 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))'
+    };
+    
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${styles[type] || styles.info};
+        color: white;
+        padding: 20px 30px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-xl);
+        z-index: 9999;
+        transform: translateX(150%);
+        transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        max-width: 400px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        animation: notificationSlideIn 0.5s forwards;
+    `;
+    
+    notification.innerHTML = `
+        <i class="fas ${icons[type] || icons.info}" style="font-size: 24px;" aria-hidden="true"></i>
+        <div>
+            <h4 style="margin: 0 0 5px 0; font-weight: 600;">${type === 'success' ? 'Успешно!' : 'Внимание!'}</h4>
+            <p style="margin: 0; opacity: 0.9; font-size: 14px;">${message}</p>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Автоматическое скрытие через 5 секунд
+    setTimeout(() => {
+        notification.style.transform = 'translateX(150%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 5000);
+}
+
+// Добавьте эту анимацию в стили
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes notificationSlideIn {
+        from {
+            transform: translateX(150%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Пытаемся синхронизировать при загрузке
+window.addEventListener('load', function() {
+    setTimeout(syncPendingRequests, 3000); // Задержка 3 секунды
+    
+    // Также логируем посещение страницы
+    fetch('api/log_visit.php')
+        .catch(e => console.error('Visit logging failed:', e));
+});
                 
                 // Создаем красивый контейнер для уведомления
                 const notification = document.createElement('div');
@@ -292,8 +482,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 2000);
                 }, 2000);
             }
-        });
-    }
+        );
+    
     
     // Анимация появления элементов с задержкой
     const observer = new IntersectionObserver((entries) => {
@@ -556,7 +746,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const scrolled = (winScroll / height) * 100;
         progressBar.style.width = scrolled + '%';
     });
-});
+;
 
 // ========== TEAM CARDS FUNCTIONALITY ==========
 
@@ -711,4 +901,28 @@ window.addEventListener('load', function() {
     if (typeof window.initCodeGame === 'undefined') {
         console.log('Загрузка игры "Собери код"...');
     }
+    // Функция для безопасной отправки данных
+async function sendFormData(url, data) {
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+            signal: AbortSignal.timeout(10000) // Таймаут 10 секунд
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            throw new Error('Превышено время ожидания ответа сервера');
+        }
+        throw error;
+    }
+}
 });
