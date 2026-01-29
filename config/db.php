@@ -5,7 +5,7 @@ class Database {
     private $username = "root"; // замените на вашего пользователя
     private $password = ""; // замените на ваш пароль
     private $conn;
-
+    
     public function getConnection() {
         $this->conn = null;
 
