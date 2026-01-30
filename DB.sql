@@ -2,6 +2,14 @@
 CREATE DATABASE IF NOT EXISTS it_vuz_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE it_vuz_db;
 
+INSERT INTO admin_users (username, email, password_hash, role) 
+VALUES (
+    'admin', 
+    'admin@it-vuz.ru', 
+    'claurum',
+    'admin'
+);
+
 -- Таблица для демо-запросов
 CREATE TABLE demo_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -70,3 +78,11 @@ CREATE TABLE activity_logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES admin_users(id) ON DELETE SET NULL
 );
+
+CREATE USER 'itvuz_user'@'localhost' IDENTIFIED BY 'StrongPassword123!';
+
+GRANT ALL PRIVILEGES ON it_vuz_db.* TO 'itvuz_user'@'localhost';
+
+FLUSH PRIVILEGES;
+
+SELECT User, Host FROM mysql.user WHERE User = 'itvuz_user';
