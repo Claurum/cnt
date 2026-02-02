@@ -199,52 +199,37 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ========== ФОРМА ДЕМО-ЗАПРОСА С БАЗОЙ ДАННЫХ ==========
 
-// Обновленный обработчик формы демо-запроса
+// Обновленный обработчик формы
 const demoForm = document.getElementById('demoRequestForm');
 if (demoForm) {
     demoForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+        console.log('Форма отправлена');
         
-        // Простая валидация
-        const inputs = this.querySelectorAll('input[required]');
-        let isValid = true;
-        
-        // Собираем данные формы
+        // Сбор данных формы
         const formData = {
             name: this.querySelector('input[placeholder="Ваше имя"]').value,
             email: this.querySelector('input[type="email"]').value,
             organization: this.querySelector('input[placeholder="Организация"]').value || ''
         };
         
-        // Валидация полей
-        inputs.forEach(input => {
-            if (!input.value.trim()) {
-                input.style.borderColor = 'var(--danger-color)';
-                input.style.animation = 'shake 0.5s ease-in-out';
-                isValid = false;
-                
-                input.setAttribute('aria-invalid', 'true');
-                input.setAttribute('aria-describedby', 'error-' + input.name);
-            } else {
-                input.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                input.style.animation = '';
-                input.removeAttribute('aria-invalid');
-                input.removeAttribute('aria-describedby');
-            }
-        });
+        console.log('Данные для отправки:', formData);
         
-        if (!isValid) return;
+        // Валидация
+        if (!formData.name.trim() || !formData.email.trim()) {
+            alert('Пожалуйста, заполните обязательные поля');
+            return;
+        }
         
         const submitBtn = this.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
         
-        // Показываем состояние отправки
+        // Показываем индикатор загрузки
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
         submitBtn.disabled = true;
-        submitBtn.setAttribute('aria-label', 'Идет отправка формы');
         
         try {
-            // Отправка данных на сервер
+            // Отправляем запрос на сервер
             const response = await fetch('api/submit_demo.php', {
                 method: 'POST',
                 headers: {
@@ -254,37 +239,93 @@ if (demoForm) {
             });
             
             const result = await response.json();
+            console.log('Ответ сервера:', result);
             
             if (result.success) {
-                // Успешная отправка
+                // Успех - показываем уведомление
                 showNotification(result.message, 'success');
                 demoForm.reset();
-                
-                // Отправка данных в Google Analytics (если есть)
-                if (typeof gtag === 'function') {
-                    gtag('event', 'demo_request', {
-                        'event_category': 'engagement',
-                        'event_label': 'Demo Request Form'
-                    });
-                }
             } else {
+                // Ошибка
                 showNotification(result.error || 'Ошибка отправки', 'error');
             }
             
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Ошибка сети:', error);
             showNotification('Ошибка подключения к серверу', 'error');
-            
-            // Fallback: сохраняем в localStorage если сервер недоступен
-            saveToLocalStorage(formData);
-            
         } finally {
+            // Восстанавливаем кнопку
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
-            submitBtn.setAttribute('aria-label', 'Заказать демо');
         }
     });
 }
+
+// Функция показа уведомлений
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Анимация появления
+    setTimeout(() => notification.classList.add('show'), 10);
+    
+    // Автоматическое скрытие через 5 секунд
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
+
+// Добавьте стили для уведомлений в CSS
+const notificationStyles = `
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 9999;
+    transform: translateX(150%);
+    transition: transform 0.3s ease;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.success {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.notification.error {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.notification.info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.notification i {
+    font-size: 20px;
+}
+`;
+
+// Добавляем стили в документ
+const styleEl = document.createElement('style');
+styleEl.textContent = notificationStyles;
+document.head.appendChild(styleEl);
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
