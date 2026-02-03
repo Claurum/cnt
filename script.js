@@ -1,5 +1,19 @@
 // JavaScript для вертикального макета с улучшениями
 document.addEventListener('DOMContentLoaded', function() {
+     // Загружаем статистику из БД
+    fetch('api/get_statistics.php')
+        .then(response => response.json())
+        .then(data => {
+            // Обновляем анимированные счетчики
+            updateCounters(data);
+        });
+    
+    // Загружаем отзывы
+    fetch('api/get_reviews.php')
+        .then(response => response.json())
+        .then(reviews => {
+            displayReviews(reviews);
+        });
     // Переключение темы
     const themeToggle = document.getElementById('themeToggle');
     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
