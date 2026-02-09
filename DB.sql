@@ -68,6 +68,40 @@ CREATE TABLE admin_users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    faculty VARCHAR(100),
+    course INT,
+    enrollment_date DATE
+);
+
+CREATE TABLE IF NOT EXISTS professors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    degree VARCHAR(50),
+    department VARCHAR(100),
+    email VARCHAR(100) UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS schedule (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_name VARCHAR(100),
+    professor_id INT,
+    day_of_week VARCHAR(20),
+    time TIME,
+    classroom VARCHAR(20)
+);
+
+INSERT INTO students (full_name, email, faculty, course) VALUES 
+('Иванов Иван', 'ivanov@itvuz.ru', 'Информационные технологии', 3),
+('Петрова Анна', 'petrova@itvuz.ru', 'Программная инженерия', 2);
+
+INSERT INTO professors (name, degree, department) VALUES 
+('Смирнов А.В.', 'Доктор наук', 'Кафедра информатики'),
+('Козлова Е.П.', 'Кандидат наук', 'Кафедра программирования');
+
 -- Таблица для логов действий
 CREATE TABLE activity_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
