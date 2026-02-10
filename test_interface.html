@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тест БД IT-ВУЗ</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .card { border: 1px solid #ddd; padding: 20px; margin: 10px; border-radius: 5px; }
+        button { background: #4CAF50; color: white; padding: 10px; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Тестирование базы данных IT-ВУЗ</h1>
+    
+    <div class="card">
+        <h3>1. Проверить подключение</h3>
+        <button onclick="testConnection()">Тест подключения</button>
+        <div id="connectionResult"></div>
+    </div>
+    
+    <div class="card">
+        <h3>2. Показать таблицы</h3>
+        <button onclick="showTables()">Показать все таблицы</button>
+        <div id="tablesResult"></div>
+    </div>
+    
+    <div class="card">
+        <h3>3. Тестовые запросы</h3>
+        <button onclick="query('SELECT * FROM users LIMIT 5')">Пользователи</button>
+        <button onclick="query('SELECT * FROM courses LIMIT 5')">Курсы</button>
+        <button onclick="query('SELECT COUNT(*) as total FROM users')">Статистика</button>
+        <div id="queryResult"></div>
+    </div>
+
+    <script>
+    async function testConnection() {
+        const res = await fetch('test_connection.php');
+        document.getElementById('connectionResult').innerHTML = await res.text();
+    }
+    
+    async function showTables() {
+        const res = await fetch('api/get_tables.php');
+        document.getElementById('tablesResult').innerHTML = await res.text();
+    }
+    
+    async function query(sql) {
+        const res = await fetch('api/query.php?sql=' + encodeURIComponent(sql));
+        document.getElementById('queryResult').innerHTML = await res.text();
+    }
+    </script>
+</body>
+</html>
